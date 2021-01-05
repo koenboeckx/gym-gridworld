@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 
 # define colors
 # 0: black; 1 : gray; 2 : blue; 3 : green; 4 : red
-COLORS = {0:[0.0,0.0,0.0], 1:[0.5,0.5,0.5], \
+COLORS = {-1: [0.0,0.0,0.0],
+          0:[0.0,0.0,0.0], 1:[0.5,0.5,0.5], \
           2:[0.0,0.0,1.0], 3:[0.0,1.0,0.0], \
           4:[1.0,0.0,0.0], 6:[1.0,0.0,1.0], \
           7:[1.0,1.0,0.0]}
@@ -27,7 +28,7 @@ class GridworldEnv(gym.Env):
         self.action_pos_dict = {0: [0,0], 1:[-1, 0], 2:[1,0], 3:[0,-1], 4:[0,1]}
  
         ''' set observation space '''
-        self.obs_shape = [128, 128, 3]  # observation space shape
+        self.obs_shape = [7, 7]  # observation space shape
         self.observation_space = spaces.Box(low=0, high=1, shape=self.obs_shape, dtype=np.float32)
     
         ''' initialize system state ''' 
@@ -150,13 +151,19 @@ class GridworldEnv(gym.Env):
                 observation[i*gs0:(i+1)*gs0, j*gs1:(j+1)*gs1] = np.array(COLORS[grid_map[i,j]])
         return observation
     
-    def _gridmap_to_observation(self, grid_map, obs_shape=(5, 5)):
-        observation = np.zeros(obs_shape, dtype=np.float32)
-        x, y = self.get_agent_state()
+    def _gridmap_to_observation(self, grid_map, obs_shape=None):
+        if obs_shape is None:
+            obs_shape = self.obs_shape
+        observation = -np.ones(obs_shape, dtype=np.float32)
+        x_agent, y_agent = self.get_agent_state()
         grid_map = np.array(grid_map)
-        observation = grid_map[x-obs_shape[0]//2:x+obs_shape[0]//2 + 1,
-                               y-obs_shape[1]//2:y+obs_shape[1]//2 + 1]
-        print('observation = ', observation)
+        for i in range(-obs_shape[0]//2, obs_shape[0]//2 + 1):
+            x = x_agent+i
+            if 0<= x < self.grid_map_shape[0]:
+                for j in range(-obs_shape[1]//2, obs_shape[1]//2 + 1):
+                    y = y_agent+j
+                    if 0<= y < self.grid_map_shape[1]:
+                        observation[i+obs_shape[0]//2, j+obs_shape[1]//2] = grid_map[x, y]
         return observation
 
   
