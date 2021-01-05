@@ -35,12 +35,12 @@ class GridworldEnv(gym.Env):
         self.grid_map_path = os.path.join(this_file_path, 'plan5.txt')        
         self.start_grid_map = self._read_grid_map(self.grid_map_path) # initial grid map
         self.current_grid_map = copy.deepcopy(self.start_grid_map)  # current grid map
-        self.observation = self._gridmap_to_observation(self.start_grid_map)
         self.grid_map_shape = self.start_grid_map.shape
 
         ''' agent state: start, target, current state '''
         self.agent_start_state, self.agent_target_state = self._get_agent_start_target_state(self.start_grid_map)
         self.agent_state = copy.deepcopy(self.agent_start_state)
+        self.observation = self._gridmap_to_observation(self.start_grid_map)
 
         ''' set other parameters '''
         self.restart_once_done = False  # restart or not once done
@@ -139,7 +139,7 @@ class GridworldEnv(gym.Env):
             sys.exit('Start or target state not specified')
         return start_state, target_state
 
-    def _gridmap_to_observation(self, grid_map, obs_shape=None):
+    def _gridmap_to_observation_(self, grid_map, obs_shape=None):
         if obs_shape is None:
             obs_shape = self.obs_shape
         observation = np.zeros(obs_shape, dtype=np.float32)
@@ -149,6 +149,16 @@ class GridworldEnv(gym.Env):
             for j in range(grid_map.shape[1]):
                 observation[i*gs0:(i+1)*gs0, j*gs1:(j+1)*gs1] = np.array(COLORS[grid_map[i,j]])
         return observation
+    
+    def _gridmap_to_observation(self, grid_map, obs_shape=(5, 5)):
+        observation = np.zeros(obs_shape, dtype=np.float32)
+        x, y = self.get_agent_state()
+        grid_map = np.array(grid_map)
+        observation = grid_map[x-obs_shape[0]//2:x+obs_shape[0]//2 + 1,
+                               y-obs_shape[1]//2:y+obs_shape[1]//2 + 1]
+        print('observation = ', observation)
+        return observation
+
   
     def _render(self, mode='human', close=False):
         if self.verbose == False:
